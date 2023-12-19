@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+		<div class="topnav">
+			<br>
+			<button onclick=turnX() name="Turn 90 Degrees X">Turn 90 Degrees X</button>
+			<button onclick=turnY() name="Turn 90 Degrees Y">Turn 90 Degrees Y</button>
+			<button onclick=turnZ() name="Turn 90 Degrees Z">Turn 90 Degrees Z</button>
+			<button onclick=doUpload() name="A">AAAAAA</button>
+			<button onclick=doUpload() name="B">BBBBBB</button>
+			<button onclick=doUpload() name="Turn 90 Degrees Z">CCCCCC</button>
+			<button onclick=doUpload() name="Turn 90 Degrees Z">DDDDDD</button>
+			<button onclick=doUpload() name="Turn 90 Degrees Z">EEEEEE</button>
+			<button onclick=doUpload() name="Turn 90 Degrees Z">FFFFFF</button>
+			<button onclick=doUpload() name="Turn 90 Degrees Z">GGGGGG</button>
+			<button onclick=doUpload() name="Turn 90 Degrees Z">HHHHHH</button>
+			<button onclick=doUpload() name="Turn 90 Degrees Z">IIIIII</button>
+			<button onclick=doUpload() name="Turn 90 Degrees Z">JJJJJJ</button>
+		</div>
+		
+	</head>
+
+	<body>
+		<link rel="stylesheet" href="styles.css">
+		<script src="main.js"></script>
+		<script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+        
+		<script type="x-shader/x-vertex" id="vertexshader">
+
+			attribute float size;
+			attribute vec3 customColor;
+
+			varying vec3 vColor;
+
+			void main() {
+
+				vColor = customColor;
+
+				vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+
+				gl_PointSize = size * ( 300.0 / -mvPosition.z );
+
+				gl_Position = projectionMatrix * mvPosition;
+
+			}
+
+		</script>
+
+		<script type="x-shader/x-fragment" id="fragmentshader">
+
+			uniform vec3 color;
+			uniform sampler2D pointTexture;
+			uniform float alphaTest;
+
+			varying vec3 vColor;
+
+			void main() {
+
+				gl_FragColor = vec4( color * vColor, 1.0 );
+
+				gl_FragColor = gl_FragColor * texture2D( pointTexture, gl_PointCoord );
+
+				if ( gl_FragColor.a < alphaTest ) discard;
+
+			}
+
+		</script>
+
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "../build/three.module.js",
+					"three/addons/": "./jsm/"
+				}
+			}
+		</script>
+		
+		<div id="mySidebar" class="sidebar">
+			<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+			<a href="#">XXXXXXX</a>
+			<a href="#">YYYYYYY</a>
+			<a href="#">ZZZZZZZ</a>		
+			<a href="#">Open Image</a>
+			<br>
+			<input type="file" id="input" multiple />
+			<button onClick="upload()">Submit</button>
+			<br>
+			<p2 id="pt2"> Bad File Type. Please choose an image and try again.</p2>
+			<br>
+			<button onClick="hideImage()" id="hide">Hide Image</button>
+			<br>
+			<br>
+			<button onClick="showImage()" id="show">Show Image</button>
+			<br>
+			<br>
+			<button onClick="disableParalax()" id="disable">Disable Paralax</button>
+			<br>
+			<br>
+			<button onClick="enableParalax()" id="enable">Enable Paralax</button>
+			<br>
+			<br>
+			<div class="subsection">
+
+				<h3 style="color: white;">Parallax Zoom</h3>
+			
+				<input type="range" id="parallaxZoomSlider" min="200" max="1000" value="0">
+			
+				<!--<p  style="color: white;">Zoom Level: <span id="zoomLevel">150%</span></p> -->
+			<script type="module">
+				const parallaxZoomSlider = document.getElementById('parallaxZoomSlider');
+				const zoomLevelSpan = document.getElementById('zoomLevel');
+
+				const image2 = document.querySelector('.image');
+
+				parallaxZoomSlider.addEventListener('input', function () {
+				// Getting the current slider value
+				const zoomPercentage = parallaxZoomSlider.value;
+
+				// Updating the zoom level display : to implement
+				//document.getElementById("zoomLevel").innerHTML= "zoomPercentage";
+				document.documentElement.style.setProperty('--zoomLevel', zoomPercentage + "%");
+				console.log(document.documentElement.style.getPropertyValue('--zoomLevel'));
+			});
+  
+
+			</script>
+			</div>
+	
+		</div>
+			<div id="main">
+				<button class="openbtn" onclick="openNav()">&#9776;</button>
+				
+			</div>
+
+			<!--<div class="sidebar">
+	
+					<h1>PCD Viewing Portal</h1>
+	
+					<div id="info">
+						<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a>
+						<a href="https://pointclouds.org/documentation/tutorials/pcd_file_format.html" target="_blank" rel="noopener">PCD File format</a>
+					</div>
+					
+	
+				
+			</div> -->
+		
+			<div id="scene-container">
+				<canvas id="thrjs">
+				   <script type="module" src="js1.js"></script>
+				</canvas>
+			</div>
+
+		<div class="pop" id="popout">
+			<div class="image" id="hass"></div>
+			<script>
+				const imgZ = document.querySelector('.pop');
+				console.log(imgZ);
+				imgZ.addEventListener( 'resize', imgResize );
+				
+				function imgResize(){
+					console.log("y");
+					document.getElementById("hass").style.width = document.getElementById("popout").style.width;
+					document.getElementById("hass").style.height = document.getElementById("popout").style.height;
+ 				}
+
+				const image = document.querySelector('.image');
+				if (image != null){
+					console.log(image);
+				} else {
+					console.log("0");
+				}
+				image.addEventListener('mousemove', function (e) {
+					let width = image.offsetWidth;
+					let height = image.offsetHeight;
+					let mouseX = e.offsetX;
+					let mouseY = e.offsetY;
+					
+					let bgPosX = (mouseX / width * 100);
+					let bgPosY = (mouseY / height * 100);
+					console.log("1");
+					if(paralax){
+					image.style.backgroundPosition = `${bgPosX}% ${bgPosY}%`;
+					}
+				});
+
+				image.addEventListener('mouseleave', function () {
+					image.style.backgroundPosition = "center";
+					console.log("2");
+				});
+			</script>	
+		
+		</div>
+			
+	</body>
+</html>

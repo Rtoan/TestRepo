@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>LiDAR HAP Viewer</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="main.css">
+		<!-- Creates two triangles and a center button for opening the sidebar-->
+		<div id="tri1" onclick="openNav()"></div>
+		<a2 id="openbtn" onclick="openNav()">&#9776;</a2>
+		<div id="tri2" onclick="openNav()"></div>
+	</head>
+	<body>
+
+		<script>
+
+			var x = 1;
+			width = 565;
+			height = 182;
+			while (((width/height)-x)>1) {
+				x++;
+			}
+			console.log(((width/height)-x)*100 + "%");
+		</script>
+		<div class="pop" id="poppedOut">
+			<script>
+				let resizeObserver = new ResizeObserver(() => {
+					const pop = document.querySelector('.pop');
+					let height = pop.offsetHeight;
+					let width = pop.offsetWidth;
+					document.getElementById("poppedOut").style.aspectRatio = (width + "/" + height);
+					document.getElementById("hass").style.paddingTop = ((100 * (height/width)) + "%");
+					document.getElementById("hass").style.paddingLeft = ((100 * ((width/height)-1)) + "%");
+				}); 
+				
+				resizeObserver.observe(poppedOut); 
+			</script>		
+
+			<div id="poppedOutheader">Image View</div>
+			<script>
+				// Make the DIV element draggable:
+				dragElement(document.getElementById("poppedOut"));
+
+				function dragElement(elmnt) {
+					var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+					if (document.getElementById(elmnt.id + "header")) {
+						// if present, the header is where you move the DIV from:
+						document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+					} else {
+						// otherwise, move the DIV from anywhere inside the DIV:
+						elmnt.onmousedown = dragMouseDown;
+					}
+					function dragMouseDown(e) {
+						e = e || window.event;
+						e.preventDefault();
+						// get the mouse cursor position at startup:
+						pos3 = e.clientX;
+						pos4 = e.clientY;
+						document.onmouseup = closeDragElement;
+						// call a function whenever the cursor moves:
+						document.onmousemove = elementDrag;
+					}
+
+					function elementDrag(e) {
+						e = e || window.event;
+						e.preventDefault();
+						// calculate the new cursor position:
+						pos1 = pos3 - e.clientX;
+						pos2 = pos4 - e.clientY;
+						pos3 = e.clientX;
+						pos4 = e.clientY;
+						// set the element's new position:
+						elmnt.style.top = (pos4) + "px";
+						elmnt.style.left = (pos3) + "px";
+					}
+
+					function closeDragElement() {
+						// stop moving when mouse button is released:
+						document.onmouseup = null;
+						document.onmousemove = null;
+					}
+				}
+			</script>
+			<div class="popoutImage" id="hass"></div>
+			<script>
+				const image2 = document.querySelector('.popoutImage');
+
+				image2.addEventListener('mouseover',function(e) {
+					var popped = document.getElementById('poppedOut');
+					var testForParallax = window.getComputedStyle(popped).getPropertyValue("visibility");
+					if(testForParallax === "visible"){
+						document.getElementById('hass').style.backgroundSize = "150%";
+					}
+				});
+
+				const imgZ = document.querySelector('.pop');
+				console.log(imgZ);
+				imgZ.addEventListener( 'resize', imgResize );
+				
+				function imgResize(){
+					console.log("y");
+					document.getElementById("hass").style.width = document.getElementById("poppedOut").style.width;
+					document.getElementById("hass").style.height = document.getElementById("poppedOut").style.height;
+				 }
+
+				const img = document.querySelector('.popoutImage');
+				if (img != null){
+					console.log(img);
+				} else {
+					console.log("0");
+				}
+				img.addEventListener('mousemove', function (e) {
+					let width = img.offsetWidth;
+					let height = img.offsetHeight;
+					let mouseX = e.offsetX;
+					let mouseY = e.offsetY;
+					
+					let bgPosX = (mouseX / width * 100);
+					let bgPosY = (mouseY / height * 100);
+					console.log("1");
+					img.style.backgroundPosition = `${bgPosX}% ${bgPosY}%`;
+				});
+
+				img.addEventListener('mouseleave', function () {
+					img.style.backgroundPosition = "center";
+					img.style.backgroundSize = "contain";
+					console.log("2");
+				});
+			</script>	
+		
+		</div>
+		<div style = "background-color: aliceblue;">
+			<div id="leftsection">
+				<!-- Creates button for closing the sidebar and creates functions for both operations-->
+				<a href="javascript:void(0)" class="closebtn" onclick="closeNav()" style="margin-left: 220px;">&times;</a>
+				<script>
+					function closeNav() {
+						document.getElementById("leftsection").style.width="0";
+						document.getElementById("leftsection").style.visibility="hidden";
+						document.getElementById("openbtn").style.visibility="visible";
+						document.getElementById("poppedOut").style.marginLeft = "55px";
+					    document.getElementById("poppedOut").style.marginRight = "70%";
+					}
+
+					function openNav() {
+						document.getElementById("leftsection").style.width="300px";
+						document.getElementById("leftsection").style.visibility="visible";
+						document.getElementById("openbtn").style.visibility="hidden";
+						document.getElementById("poppedOut").style.marginLeft = "375px";
+					    document.getElementById("poppedOut").style.marginRight = "45%";
+					}
+
+				</script>
+				<h2>Features</h2>
+				<div class="subsection">
+					<p>Total Points: <span id="totalPoints">0</span></p>
+					<p>Camera Distance: <span id="cameraDistance">0</span></p>
+			
+					<!-- Display coordinates of the first selected point -->  
+					<p>Selected Point 1: <span id="selectedPoint1">-</span></p>
+			
+					<!-- Display coordinates of the second selected point -->
+					<p>Selected Point 2: <span id="selectedPoint2">-</span></p>
+			
+					<p>Distance: <span id="distance">-</span></p>
+				</div>
+				<div class="subsection">
+					<!-- Add HTML Elements for Distance Labels and Deletion -->
+					<h3>Measured Distances</h3>
+					<ul id="measuredDistances">
+						<!-- Distance items will be added here -->
+					</ul>
+					<button id="clearDistancesButton">Clear All</button>
+				</div>
+
+				<div class="subsection">
+					<a id="popoutButton" style="margin-left: 200px;" onclick="popoutBegin()">&#10064;</a>
+					<a id="closePopoutButton" style="margin-left: 170px; visibility: hidden;" onclick="popoutEnd()">&#8592;</a>
+					<script> 
+						function popoutBegin() {
+							document.getElementById("hass").style.visibility = "visible";
+ 						  	document.getElementById("poppedOut").style.visibility = "visible";
+    						document.getElementById("poppedOut").style.width = document.getElementById("hass").style.width;
+    						document.getElementById("poppedOut").style.height = document.getElementById("hass").style.height;
+							var imageViewer = document.getElementById('imageView');
+							var imgLink = window.getComputedStyle(imageViewer).getPropertyValue("background-image");
+							document.getElementById("hass").style.backgroundImage=imgLink; 
+							//document.getElementById("imageView").style.backgroundImage = "";
+							document.getElementById("popoutButton").style.visibility="hidden";
+							document.getElementById("closePopoutButton").style.visibility="visible";
+						}
+
+						function popoutEnd() {
+							document.getElementById("hass").style.visibility = "hidden";
+ 						  	document.getElementById("poppedOut").style.visibility = "hidden";
+							var imageViewer = document.getElementById('hass');
+							var imgLink = window.getComputedStyle(imageViewer).getPropertyValue("background-image");
+							document.getElementById("imageView").style.backgroundImage=imgLink; 
+							document.getElementById("hass").style.backgroundImage = "";
+							document.getElementById("popoutButton").style.visibility="visible";
+							document.getElementById("closePopoutButton").style.visibility="hidden";
+						}
+					</script>
+					<h3>Image Captured</h3>
+					<div id="image-box">
+						<div id="zoomable-area" style="width: 100%; height: 100%; overflow: hidden;">
+							<!-- Creates Image Viewer With The Class in CSS-->
+							<div class="image" id="imageView"></div>
+							<!-- Generates the actual coordinates for where the user is hovering for parallax-->
+							<!-- Placed in seperate Script tag because they were not working earlier with type module script tags-->
+							<script>
+								const image1 = document.querySelector('.image');
+								let isPanning;
+								
+								image1.addEventListener('mouseover',function(e) {
+									var popped = document.getElementById('poppedOut');
+									var testForParallax = window.getComputedStyle(popped).getPropertyValue("visibility");
+									if(testForParallax === "hidden"){
+									document.getElementById('imageView').style.backgroundSize = "150%";
+									}
+								});
+
+								if (image1 != null){
+									console.log(image1);
+								} else {
+									console.log("0");
+								}
+
+								image1.addEventListener('mousedown',function(e){
+									isPanning = true;
+								})
+
+								image1.addEventListener('mouseup',function(e){
+									isPanning = false;
+								})
+
+								image1.addEventListener('mousemove', function (e) {
+									if (isPanning){
+									let width = image1.offsetWidth;
+									let height = image1.offsetHeight;
+									let mouseX = e.offsetX;
+									let mouseY = e.offsetY;
+									
+									var popped = document.getElementById('poppedOut');
+									var testForParallax = window.getComputedStyle(popped).getPropertyValue("visibility");
+		 						
+									if(testForParallax === "hidden"){
+									let bgPosX = (mouseX / width * 100);
+									let bgPosY = (mouseY / height * 100);
+									console.log("1");
+									image1.style.backgroundPosition = `${bgPosX}% ${bgPosY}%`;
+									}
+								}
+								});
+								//Resets image when user leaves it
+								image1.addEventListener('mouseleave', function () {
+									console.log("2");
+								});
+							</script>
+						</div>
+					</div>
+				</div>
+
+				<button id="openPopupButton">Upload Files</button>
+			</div>
+
+			<div id="distancePopup" class="distance-popup">
+				<span id="distanceAlongLine">-</span>
+		   </div>
+		   <div id="popup" class="popup">
+			<span class="close" id="closePopup">&times;</span>
+			<h3>Upload Files</h3>
+			<div id="pcdFileContainer">
+				<h4>Load .pcd File:</h4>
+				<input type="file" accept=".pcd" id="pcdFileInput">
+			</div>
+			<div id="imageFileContainer">
+				<h4>Load .png Image:</h4>
+				<input type="file" accept=".png" id="imageFileInput">
+			</div>
+	
+
+			<!-- Import maps polyfill -->
+			<!-- Remove this when import maps will be widely supported -->
+			<script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+
+			<script type="importmap">
+				{
+					"imports": {
+						"three": "../build/three.module.js",
+						"three/addons/": "./jsm/"
+					}
+				}
+			</script>
+
+			<script type="module">
+
+				const zoomableArea = document.getElementById('zoomable-area');
+				const image = document.getElementById('image');
+				const zoomSpeed = 0.05; // Adjusting the zoom speed
+				let zoomLevel = 1.0;
+
+				const redSpheres = [];
+				// Array to store measured distances
+				const measuredDistances = []; 
+
+				let highlightedPointMesh = null;
+
+				import * as THREE from 'three';
+
+				import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+				import { PCDLoader } from 'three/addons/loaders/PCDLoader.js';
+				import Stats from 'three/addons/libs/stats.module.js';
+				import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+
+				let camera, scene, renderer;
+				let line; //line between 2 points
+				let translationAmount = 30; // Amount to translate the camera
+
+				// Variable to store the total number of points
+				let totalPointsCount = 0;
+
+				let cameraDistanceText = document.getElementById('cameraDistance');
+
+				//variables to store the selected points and the distance between them
+				let selectedPoint1 = null;
+				let selectedPoint2 = null;
+				let distance = 0;
+
+				let currentPCDData;
+
+
+				init();
+				render();
+
+				function drawThickerCylinder(point1, point2, thickness) {
+				const direction = new THREE.Vector3().subVectors(point2, point1);
+				const length = direction.length();
+
+				const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
+
+				const cylinderGeometry = new THREE.CylinderGeometry(thickness, thickness, length, 32);
+				const cylinder = new THREE.Mesh(cylinderGeometry, material);
+
+				// Position the cylinder at the midpoint between the two points
+				cylinder.position.copy(point1).add(direction.multiplyScalar(0.5));
+
+				// Orient the cylinder along the direction vector
+				cylinder.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.clone().normalize());
+
+				scene.add(cylinder);
+				render();
+				}
+
+				// Adding event listeners to the file input elements
+				document.getElementById('pcdFileInput').addEventListener('change', handlePCDFile);
+				document.getElementById('imageFileInput').addEventListener('change', handleImageFile);
+
+				// Function to handle .pcd file loading
+				function handlePCDFile(event) {
+					const pcdFile = event.target.files[0];
+					if (!pcdFile) return;
+
+					// Create a FileReader to read the contents of the selected .pcd file
+					const pcdReader = new FileReader();
+
+					pcdReader.onload = function (e) {
+						const pcdData = e.target.result;
+
+						// Parse and display the .pcd file data (You'll need a PCD parser for this)
+						// For now, you can display the file name
+						document.getElementById('pcdFileName').textContent = pcdFile.name;
+					};
+
+					// Read the .pcd file as text
+					pcdReader.readAsText(pcdFile);
+				}
+
+				// Function to handle .png image loading
+				function handleImageFile(event) {
+					const imageFile = event.target.files[0];
+					if (!imageFile) return;
+						//Gets URL For Image And Sets the Background Image of the Image Viewer to that URL
+						const objectURL = window.URL.createObjectURL(imageFile);
+						console.log(objectURL);
+						var element = document.getElementById('poppedOut');
+						var test = window.getComputedStyle(element).getPropertyValue("visibility"); 
+						console.log(test);
+						if( test === "visible"){
+						document.getElementById("hass").style.backgroundImage = "url("+ objectURL +")";
+						document.getElementById("imageView").style.backgroundImage = "url("+ objectURL +")";
+						} else if(test === "hidden"){
+						document.getElementById("imageView").style.backgroundImage = "url("+ objectURL +")";
+						}
+				};
+
+				// Function to open the pop-up
+				function openPopup() {
+					const popup = document.getElementById('popup');
+					popup.style.display = 'block';
+				}
+
+				// Function to close the pop-up
+				function closePopup() {
+					const popup = document.getElementById('popup');
+					popup.style.display = 'none';
+				}
+
+				// Event listener to open the pop-up when a button is clicked
+				document.getElementById('openPopupButton').addEventListener('click', openPopup);
+
+				// Event listener to close the pop-up when the close button is clicked
+				document.getElementById('closePopup').addEventListener('click', closePopup);
+
+
+				function init() {
+
+					renderer = new THREE.WebGLRenderer( { antialias: true } );
+					renderer.setPixelRatio( window.devicePixelRatio );
+					renderer.setSize( window.innerWidth, window.innerHeight );
+					document.body.appendChild( renderer.domElement );
+
+					scene = new THREE.Scene();
+
+					camera = new THREE.PerspectiveCamera( 30, window.innerWidth / window.innerHeight, 0.01, 100 );
+					camera.position.set( 0, 0, 1 );
+					scene.add( camera );
+
+					const controls = new OrbitControls( camera, renderer.domElement );
+					controls.addEventListener( 'change', render ); // use if there is no animation loop
+					controls.minDistance = 0.0001;
+					controls.maxDistance = 45;
+
+					 // Adding event listener to the renderer for mouse clicks
+   					renderer.domElement.addEventListener('click', onClick);
+
+					//scene.add( new THREE.AxesHelper( 2 ) );
+					const axesHelper = new THREE.AxesHelper(2);
+
+					// Setting the desired position for the AxesHelper
+					axesHelper.position.set(0,0,0); 
+
+					// Adding the AxesHelper to the scene
+					scene.add(axesHelper);
+
+					// Adding the Translate Camera button and event listener
+					const translateButton = document.createElement("button");
+					translateButton.textContent = "Global Zoom";
+					translateButton.addEventListener("click", translateCamera);
+					const translateSection = document.createElement("div");
+					translateSection.classList.add("subsection");
+					const translateTitle = document.createElement("h3");
+					translateTitle.textContent = "Viewing Tools";
+					translateSection.appendChild(translateTitle);
+					translateSection.appendChild(translateButton);
+					document.getElementById("leftsection").appendChild(translateSection);
+
+					function loadAndDisplayPCD(pcdFilePath) {
+					const loader = new PCDLoader();
+					loader.load(pcdFilePath, function (points) {
+					//loader.load( './models/pcd/binary/Data1.pcd', function ( points ) {
+						// Check if there is currently loaded PCD data
+						if (currentPCDData) {
+							scene.remove(currentPCDData);
+							currentPCDData.geometry.dispose();
+							currentPCDData.material.dispose();
+							currentPCDData = null;
+						}
+						points.geometry.center();
+						points.geometry.rotateY(1* Math.PI/2 );
+						points.geometry.rotateZ( -1* Math.PI);
+						points.name = '5.pcd';
+						scene.add( points );
+
+					// Update the total number of points count
+					totalPointsCount = points.geometry.attributes.position.count;
+       				document.getElementById('totalPoints').textContent = totalPointsCount;
+
+					// Store the currently loaded PCD data
+    				currentPCDData = points;
+
+					const gui = new GUI();
+
+					//vary point sizes as per the slider on the browser
+					gui.add( points.material, 'size', 0.01, 0.5 ).onChange( render );
+					gui.addColor( points.material, 'color' ).onChange( render );
+					gui.open();
+
+					render();
+
+					// Adding a mousewheel event listener to the zoomable area
+    				zoomableArea.addEventListener('wheel', handleZoom);
+
+				});
+				function handleZoom(event) {
+				event.preventDefault();
+				
+				// Calculate the new zoom level
+				zoomLevel += event.deltaY * zoomSpeed;
+
+				// Constrain the zoom level to a reasonable range (adjust min and max zoom as needed)
+				zoomLevel = Math.max(0.1, Math.min(3.0, zoomLevel));
+
+				// Apply the zoom transformation to the image
+				image.style.transform = `scale(${zoomLevel})`;
+
+
+				render();
+			}
+			}
+
+				// Adding event listener to the file input element for .pcd files
+				document.getElementById('pcdFileInput').addEventListener('change', function (event) {
+				const pcdFile = event.target.files[0];
+				if (!pcdFile) return;
+
+				// Call the function to load and display the selected .pcd file
+				loadAndDisplayPCD(URL.createObjectURL(pcdFile));
+			});
+
+
+					window.addEventListener( 'resize', onWindowResize );
+
+				}
+
+				function onClick(event) 
+				{
+				event.preventDefault();
+
+				// Calculate normalized device coordinates (NDC) of the click
+				const mouse = new THREE.Vector2();
+				mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+				mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+
+				// Create a Raycaster and check for intersections with the points
+				const raycaster = new THREE.Raycaster();
+				//raycaster.params.Points.threshold = 0.01;
+				raycaster.setFromCamera(mouse, camera);
+				const intersects = raycaster.intersectObject(scene.getObjectByName('5.pcd'));
+
+				// Check if any points were clicked
+				if (intersects.length > 0) {
+					const clickedPoint = intersects[0].point;
+					
+					if (selectedPoint1 === null) {
+						selectedPoint1 = clickedPoint.clone();
+						document.getElementById('selectedPoint1').textContent = `${selectedPoint1.x.toFixed(2)}, ${selectedPoint1.y.toFixed(2)}, ${selectedPoint1.z.toFixed(2)}`;
+						//selectedPoint1.material = new THREE.PointsMaterial({ color: 0xff0000 }); // Set selected point material to red
+						  // Create a red sphere at the selected point's position
+						const sphereGeometry = new THREE.SphereGeometry(0.02, 32, 32);
+						const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+						const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
+						sphereMesh.position.copy(selectedPoint1);
+						scene.add(sphereMesh);
+						render();
+						redSpheres.push(sphereMesh); // Store the sphere mesh
+
+					} 
+					else if (selectedPoint2 === null) {
+						selectedPoint2 = clickedPoint.clone();
+						document.getElementById('selectedPoint2').textContent = `${selectedPoint2.x.toFixed(2)}, ${selectedPoint2.y.toFixed(2)}, ${selectedPoint2.z.toFixed(2)}`;
+						//selectedPoint2.material = new THREE.PointsMaterial({ color: 0xff0000 }); // Set selected point material to red
+						
+						// Create a red sphere at the selected point's position
+						const sphereGeometry = new THREE.SphereGeometry(0.02, 32, 32);
+						const sphereMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+						const sphereMesh = new THREE.Mesh(sphereGeometry, sphereMaterial);
+						sphereMesh.position.copy(selectedPoint2);
+						scene.add(sphereMesh);
+						render();
+						redSpheres.push(sphereMesh); // Store the sphere mesh
+
+						// Calculate the distance between the two selected points. Using euclidean distance for this
+						distance = selectedPoint1.distanceTo(selectedPoint2);
+						document.getElementById('distance').textContent = `${distance.toFixed(2)} m`;
+
+						const distanceInFeet = distance * 3.28084;
+    					document.getElementById('distance').textContent += ` ( ${distanceInFeet.toFixed(2)} ft)`;
+
+						// Drawing a line between the two selected points
+						drawLine(selectedPoint1, selectedPoint2);
+
+						// After selecting both points, draw the thicker cylinder
+           				// drawThickerCylinder(selectedPoint1, selectedPoint2, 0.02);
+
+						if (selectedPoint1 && selectedPoint2) {
+						// Adding the distance and a label to the array
+						measuredDistances.push({
+							distance: distance.toFixed(2),
+							label: `Dist${measuredDistances.length + 1}`
+						});
+
+						// Updating the display of measured distances
+						updateMeasuredDistancesDisplay();
+   					 }
+					}
+				}
+			}
+				function updateMeasuredDistancesDisplay() {
+				const measuredDistancesList = document.getElementById('measuredDistances');
+				measuredDistancesList.innerHTML = '';
+
+				// Adding each measured distance and label to the list
+				measuredDistances.forEach((item, index) => {
+					const listItem = document.createElement('li');
+					listItem.innerHTML = `<strong>${item.label}:</strong> ${item.distance} m <button onclick="deleteMeasuredDistance(${index})">Delete</button>`;
+					measuredDistancesList.appendChild(listItem);
+
+				// Event listener to the delete button for each item
+				const deleteButton = listItem.querySelector('button');
+				deleteButton.addEventListener('click', () => {
+					deleteMeasuredDistance(index);
+       			 });
+				});
+			}
+
+
+			// Event listener to the clear distances button
+			document.getElementById('clearDistancesButton').addEventListener('click', clearMeasuredDistances);
+
+			// Function to clear all measured distances
+			function clearMeasuredDistances() {
+				measuredDistances.length = 0;
+				updateMeasuredDistancesDisplay();
+			}
+
+			// Adding an event listener to the renderer for mousemove events
+			renderer.domElement.addEventListener('mousemove', onLineHover);
+
+			// Function to translate the camera in the X direction. This is for the global zoom feature
+			function translateCamera() {
+				camera.position.z += translationAmount;
+
+				// Calculating the distance between the camera and the center of the scene
+				//const cameraDistance = camera.position.distanceTo(scene.position);
+    			//document.getElementById('cameraDistance').textContent = cameraDistance.toFixed(2);
+
+				render();
+			}
+
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				render();
+
+			}
+
+			function updateCameraDistance() {
+
+			// Calculate the distance between the camera and the center of the scene
+			const cameraDistance = camera.position.distanceTo(scene.position);
+			cameraDistanceText.textContent = ` ${cameraDistance.toFixed(2)} m`;
+			}
+
+			function render() {
+
+				updateCameraDistance();
+
+				renderer.render( scene, camera );
+
+			}
+
+			// Function to draw a line between two points
+			function drawLine(point1, point2) {
+				const material = new THREE.LineBasicMaterial({ color: 0xffffff ,linewidth: 10.0}); // Blue color
+				const geometry = new THREE.BufferGeometry().setFromPoints([point1, point2]);
+				line = new THREE.Line(geometry, material);
+				scene.add(line);
+				render();
+			}
+
+			updateCameraDistance();
+
+			function clearLine() {
+			if (line) {
+				scene.remove(line);
+				line.geometry.dispose();
+				line.material.dispose();
+				line = undefined;
+				render();
+			}
+		}
+
+			// Function to handle clearing the selected points and distance. Has to be manual for now. Can add a mouse shortcut in sometime
+			function clearSelection() {
+				selectedPoint1 = null;
+				selectedPoint2 = null;
+				distance = 0;
+				document.getElementById('selectedPoint1').textContent = '-';
+				document.getElementById('selectedPoint2').textContent = '-';
+				document.getElementById('distance').textContent = '-';
+
+				clearLine();
+
+				redSpheres.forEach(sphereMesh => {
+					scene.remove(sphereMesh);
+				});
+				redSpheres.length = 0;
+
+				render();
+			}
+
+			function deleteMeasuredDistance(index) {
+				measuredDistances.splice(index, 1);
+				updateMeasuredDistancesDisplay();
+				clearLine(); // Clear the drawn line
+        	}
+
+
+			// Adding Clear Selection button and event listener
+			const clearButton = document.createElement("button");
+			clearButton.textContent = "Clear Selection";
+			clearButton.addEventListener("click", clearSelection);
+			const distanceSection = document.createElement("div");
+			distanceSection.classList.add("subsection");
+			const distanceTitle = document.createElement("h3");
+			distanceTitle.textContent = "Distance Refresh";
+			distanceSection.appendChild(distanceTitle);
+			distanceSection.appendChild(clearButton);
+			document.getElementById("leftsection").appendChild(distanceSection);
+
+
+			// Adding an event listener to the renderer for mousemove events
+			renderer.domElement.addEventListener('mousemove', onLineHover);
+
+			const distancePopup = document.getElementById('distancePopup');
+
+
+			// Function to handle mouse hover events on the blue line
+			function onLineHover(event) {
+			event.preventDefault();
+
+			// Calculate normalized device coordinates (NDC) of the mouse position
+			const mouse = new THREE.Vector2();
+			mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+			mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+			// Creating a Raycaster and check for intersections with the blue line
+			const raycaster = new THREE.Raycaster();
+			raycaster.setFromCamera(mouse, camera);
+			const intersects = raycaster.intersectObject(line);
+
+			// Checking if the mouse is hovering over the blue line
+			if (intersects.length > 0) {
+				distancePopup.style.display = 'block';
+				distancePopup.style.left = `${event.clientX + 10}px`;
+				distancePopup.style.top = `${event.clientY}px`;
+
+				// Displaying the static distance between the two selected points
+				document.getElementById('distanceAlongLine').textContent = `${distance.toFixed(2)} m`;
+			} else {
+				distancePopup.style.display = 'none';
+			}
+
+		}
+		</script>
+
+
+	</body>
+</html>

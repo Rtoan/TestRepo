@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>LiDAR Viewer</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link type="text/css" rel="stylesheet" href="main.css">
+    <style>
+        .hidden-element {
+            display: none;
+        }
+
+        #mainImage {
+            max-width: 100%;
+            max-height: 100%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%)scale(1);;
+            z-index: 1;
+            cursor: grab; 
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Creates two triangles and a center button for opening the sidebar-->
+    <div id="tri1" onclick="openNav()"></div>
+    <a2 id="openbtn" onclick="openNav()">&#9776;</a2>
+    <div id="tri2" onclick="openNav()"></div>
+    <div style="background-color: aliceblue;">
+        <div id="leftsection">
+            <!-- Creates button for closing the sidebar and creates functions for both operations-->
+            <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+            <script>
+                function closeNav() {
+                    document.getElementById("leftsection").style.width = "0";
+                    document.getElementById("leftsection").style.visibility = "hidden";
+                    document.getElementById("openbtn").style.visibility = "visible";
+                }
+
+                function openNav() {
+                    document.getElementById("leftsection").style.width = "300px";
+                    document.getElementById("leftsection").style.visibility = "visible";
+                    document.getElementById("openbtn").style.visibility = "hidden";
+                }
+            </script>
+            <img src="Logo.png" alt="Logo" id="logo-image">
+            <button id="openPopupButton">Upload Files</button>
+        </div>
+
+        <img id="mainImage" class="hidden-element" src="" alt="Uploaded Image"> 
+        <div id="popup" class="popup">
+            <span class="close" id="closePopup">&times;</span>
+            <h3>Upload Files</h3>
+            
+            <div id="imageFileContainer">
+                <h4>Load .png or .jpg Image:</h4>
+                <input type="file" accept=".png,.jpg" id="imageFileInput">
+            </div>
+
+            <!-- Import maps polyfill -->
+            <!-- Remove this when import maps will be widely supported -->
+            <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+
+            <script type="importmap">
+                {
+                    "imports": {
+                        "three": "./three.module.js",
+                        "three/addons/": "./jsm/"
+                    }
+                }
+            </script>
+
+            <script>
+                // Function to open the pop-up
+                function openPopup() {
+                    const popup = document.getElementById('popup');
+                    popup.style.display = 'block';
+                }
+
+                // Function to close the pop-up
+                function closePopup() {
+                    const popup = document.getElementById('popup');
+                    popup.style.display = 'none';
+                }
+
+                // Event listener to open the pop-up when a button is clicked
+                document.getElementById('openPopupButton').addEventListener('click', openPopup);
+
+                // Event listener to close the pop-up when the close button is clicked
+                document.getElementById('closePopup').addEventListener('click', closePopup);
+
+                // Event listener for image file input change
+                document.getElementById('imageFileInput').addEventListener('change', handleImageUpload);
+
+                // Function to handle image file upload
+                function handleImageUpload(event) {
+                    const file = event.target.files[0];
+                    if (file) {
+                        // Displaying the uploaded image on the main screen
+                        const mainImage = document.getElementById('mainImage');
+                        mainImage.src = URL.createObjectURL(file);
+                        mainImage.classList.remove('hidden-element');
+                        
+                    }
+                }
+
+                function handleImageZoom(event) {
+                    const mainImage = document.getElementById('mainImage');
+                    if (event.target === mainImage) {
+                        event.preventDefault();
+
+                        const currentZoom = parseFloat(mainImage.getAttribute('data-zoom')) || 1.0;
+
+                        const zoomSpeed = 0.1;
+
+                        // Zoom level based on the scroll direction
+                        const delta = event.deltaY > 0 ? -zoomSpeed : zoomSpeed;
+                        const newZoom = Math.max(1, currentZoom + delta); //Cannot zoom out more than the original pic
+
+                        // Setting new zoom level and update the image size
+                        mainImage.style.transform = `translate(-50%, -50%) scale(${newZoom})`;
+                        mainImage.setAttribute('data-zoom', newZoom);
+                    }
+                }
+
+                document.getElementById('mainImage').addEventListener('wheel', handleImageZoom);
+
+                function enablePanning() {
+                    
+                    const mainImage = document.getElementById('mainImage');
+                    let isPanning = false;
+                    let startX, startY, startScrollX, startScrollY;
+
+                    mainImage.addEventListener('mousedown', (event) => {
+                        isPanning = true;
+                        startX = event.clientX;
+                        startY = event.clientY;
+                        startScrollX = mainImage.scrollLeft;
+                        startScrollY = mainImage.scrollTop;
+                        mainImage.style.cursor = 'grabbing';
+                    });
+
+                    document.addEventListener('mousemove', (event) => {
+                        if (isPanning) {
+                        console.log("Entered the panning function");
+                        const deltaX = event.clientX - startX;
+                        const deltaY = event.clientY - startY;
+                        mainImage.scrollLeft = startScrollX - deltaX;
+                        mainImage.scrollTop = startScrollY - deltaY;
+                        }
+                    });
+
+                    document.addEventListener('mouseup', () => {
+                        isPanning = false;
+                        mainImage.style.cursor = 'grab';
+                    });
+                }
+                document.getElementById('mainImage').addEventListener('load', enablePanning);
+            </script>
+        </div>
+    </div>
+</body>
+</html>
